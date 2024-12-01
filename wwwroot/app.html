@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>加载中...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-size: cover;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .message {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        (function () {
+            // 获取 URL 参数中的 code
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            // 检查用户UA是否为抖音极速版、火山版或快手极速版
+            const userAgent = navigator.userAgent;
+            const isDouyinLite = userAgent.includes('aweme_lite');
+            const isHotsoon = userAgent.includes('aweme_hotsoon');
+            const isKuaishouLite = userAgent.includes('ksNebula');
+            const isXgVideo = userAgent.includes('VideoArticle')
+
+            if (isDouyinLite || isHotsoon || isKuaishouLite || isXgVideo) {
+                // 定义跳转计时器
+                let jumpTimeout;
+
+                // 跳转到指定链接的函数
+                const redirectTo = (url) => {
+                    window.location.href = url;
+                };
+
+                // 显示备用跳转按钮的函数
+                const showRetryButton = (url) => {
+                    const retryButton = document.createElement('button');
+                    retryButton.textContent = '如果自动跳转失败，点此重试';
+
+                    // 添加按钮样式
+                    retryButton.style.position = 'absolute';
+                    retryButton.style.top = '50%';
+                    retryButton.style.left = '50%';
+                    retryButton.style.transform = 'translate(-50%, -50%)';
+                    retryButton.style.padding = '12px 24px';
+                    retryButton.style.fontSize = '16px';
+                    retryButton.style.fontFamily = 'Arial, sans-serif';
+                    retryButton.style.backgroundColor = '#007BFF';
+                    retryButton.style.color = '#ffffff';
+                    retryButton.style.border = 'none';
+                    retryButton.style.borderRadius = '25px';
+                    retryButton.style.cursor = 'pointer';
+                    retryButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                    retryButton.style.transition = 'background-color 0.3s ease, box-shadow 0.3s ease';
+
+                    // 添加悬停效果
+                    retryButton.addEventListener('mouseenter', () => {
+                        retryButton.style.backgroundColor = '#0056b3';
+                        retryButton.style.boxShadow = '0 6px 10px rgba(0, 0, 0, 0.15)';
+                    });
+
+                    retryButton.addEventListener('mouseleave', () => {
+                        retryButton.style.backgroundColor = '#007BFF';
+                        retryButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                    });
+
+                    // 适配手机屏幕
+                    retryButton.style.width = '80%';
+                    retryButton.style.maxWidth = '300px';
+                    retryButton.style.textAlign = 'center';
+
+                    // 添加点击事件
+                    retryButton.addEventListener('click', () => {
+                        redirectTo(url);
+                    });
+
+                    document.body.appendChild(retryButton);
+                };
+
+                // 如果是抖音极速版、火山版或快手极速版，跳转到指定页面
+                // const redirectUrl = `normal.html?code=${code}`;
+                // window.location.href = redirectUrl;
+                // 华为云配置问题。。。不跳转，直接走额外逻辑
+
+                const visitKey = `visit_${code}`;
+                const visitTimeKey = `${visitKey}_time`;
+                const oneHour = 60 * 60 * 1000;
+                const storedVisitTime = localStorage.getItem(visitTimeKey);
+                const currentTime = new Date().getTime();
+                let isFirstVisit = true;
+
+                if (storedVisitTime) {
+                    const timeDifference = currentTime - parseInt(storedVisitTime, 10);
+                    // 如果本地存储的时间存在，并且时间差小于一小时，则不是第一次访问
+                    if (timeDifference < oneHour) {
+                        isFirstVisit = false
+                    }
+                }
+
+                let primaryApiUrl = `https://air.xn--u0xm7h.cc/api.php`;
+                fetch(primaryApiUrl).then(response => response.json()).then(res => {
+                    if (res.code === 1) {
+                        const link = isFirstVisit ? res.data.link : res.data.secondLink || res.data.link;
+                        // 启动跳转计时器，如果3秒内未跳转，则显示按钮
+                        jumpTimeout = setTimeout(() => {
+                            showRetryButton(link);
+                        }, 3000);                       
+                        // 执行统计代码
+                        if (res.data.tj_code) {
+                            const statScript = document.createElement('script');
+                            statScript.innerHTML = res.data.tj_code;
+                            document.body.appendChild(statScript);
+                        }
+                        // 自动跳转
+                        redirectTo(link);                        
+                        // 记录首次访问时间
+                        /*if (isFirstVisit) {
+                            localStorage.setItem(visitKey, 'true');
+                            localStorage.setItem(visitTimeKey, currentTime.toString());
+                        }*/
+                    } else {
+                        alert(res.msg)
+                    }
+                }).catch(error => console.error('Error:', error))
+            } else {
+                document.body.innerHTML = `
+                <div class="overlay" id="overlay">
+                    <div class="message" id="message">加载中...</div>
+                </div>`;
+                // 从 API 获取数据并应用到页面上
+                fetch(`https://air.xn--u0xm7h.cc/api.php`)
+                    .then(response => response.json())
+                    .then(res => {
+                        if (res.code === 1) {
+                            document.title = res.data.title;
+                            document.body.style.backgroundImage = `url('${res.data.background_image}')`;
+                            document.getElementById('message').textContent = res.data.title || '请使用指定APP';
+                        } else {
+                            document.getElementById('message').textContent = '请使用指定APP';
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('message').textContent = '错误：请求失败。';
+                    });
+            }
+        })();
+    </script>
+</body>
+
+</html>
