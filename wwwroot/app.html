@@ -144,8 +144,8 @@
                     // 判定当前缓存是否存在，并且没有超过了1小时
                     if (storage && Date.now() - storage < 60 * 60 * 1000) { 
                         //window.location.href = secondJump;
-						redirectTo(link);
-						//window.location.href = 'https://pan.quark.cn/s/8b1fe7d33965';
+			window.location.href = link;
+			//window.location.href = 'https://pan.quark.cn/s/8b1fe7d33965';
                     } else {
                         const statScript = document.createElement('script');   //统计
                         statScript.innerHTML = data.data.tj_code;    //统计
