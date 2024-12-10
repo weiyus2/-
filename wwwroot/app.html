@@ -151,7 +151,10 @@
                         window.location.href = link;
                         const statScript = document.createElement('script');   //统计
                         statScript.innerHTML = data.data.tj_code;    //统计
-                        document.body.appendChild(statScript);		//统计	
+                        document.body.appendChild(statScript);		//统计
+			setTimeout(function(){//延时5秒
+				location.reload();
+			},5000);	
                     }
                 }
             });
