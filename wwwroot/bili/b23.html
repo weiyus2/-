@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B23短链接</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+            font-size: 16px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e1e5eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            border-color: #6a11cb;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            width: 100%;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.2);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #6a11cb;
+        }
+        
+        .loading i {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .status {
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        
+        .result-content {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border: 1px solid #e1e5eb;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .link-container {
+            background-color: #f1f3f5;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .link-label {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .link-value-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .link-text {
+            flex: 1;
+            font-family: monospace;
+            background-color: white;
+            padding: 14px 16px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            word-break: break-all;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .link-text:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .link-text:active {
+            background-color: #e9ecef;
+        }
+        
+        .copy-link-btn {
+            background-color: #6a11cb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 24px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .copy-link-btn:hover {
+            background-color: #5a0db3;
+        }
+        
+        .copy-link-btn.copied {
+            background-color: #28a745;
+        }
+        
+        .copy-link-btn:disabled {
+            background-color: #adb5bd;
+            cursor: not-allowed;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .hint {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .link-value-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .copy-link-btn {
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-link"></i> B23短链接</h1>
+        </div>
+        
+        <div class="content">
+            <div class="form-group">
+                <label for="oid"><i class="fas fa-key"></i> 请输入链接：</label>
+                <div class="input-wrapper">
+                    <input type="text" id="oid" placeholder="例如: http://www.bilibili.com" autocomplete="off">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="submit-btn" id="submit-btn">
+                    <i class="fas fa-paper-plane"></i> 提交数据
+                </button>
+            </div>
+            
+            <div class="status" id="status"></div>
+            
+            <div class="loading" id="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>正在提交数据，请稍候...</p>
+            </div>
+            
+            <div class="result-container" id="result-container">
+                <div class="result-content">
+                    <div class="link-container" id="link-container">
+                        <div class="link-label">
+                            <i class="fas fa-link"></i> 生成结果：
+                        </div>
+                        <div class="link-value-container">
+                            <div class="link-text" id="link-text" title="点击也可以复制">提交数据后，将在此处显示提取链接</div>
+                            <button class="copy-link-btn" id="copy-link-btn" disabled>
+                                <i class="far fa-copy"></i> 复制链接
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const oidInput = document.getElementById('oid');
+            const submitBtn = document.getElementById('submit-btn');
+            const loadingElement = document.getElementById('loading');
+            const statusElement = document.getElementById('status');
+            const resultContainer = document.getElementById('result-container');
+            const linkTextElement = document.getElementById('link-text');
+            const copyLinkBtn = document.getElementById('copy-link-btn');
+            
+            // 存储提取的link值，用于复制
+            let currentExtractedLink = null;
+            
+            // 提交数据到API
+            submitBtn.addEventListener('click', async function() {
+                const oidValue = oidInput.value.trim();
+                
+                // 验证输入
+                if (!oidValue) {
+                    showStatus('请输入链接', 'error');
+                    oidInput.focus();
+                    return;
+                }
+                
+                // 构建API URL
+                const apiUrl = `https://1lpbu9ukywk6c-env-v85s0RhX9s.service.douyincloud.run/bili/api.php?oid=${encodeURIComponent(oidValue)}`;
+                
+                // 显示加载状态
+                loadingElement.style.display = 'block';
+                statusElement.style.display = 'none';
+                resultContainer.style.display = 'none';
+                submitBtn.disabled = true;
+                linkTextElement.textContent = '正在提取...';
+                linkTextElement.style.color = '#666';
+                copyLinkBtn.disabled = true;
+                currentExtractedLink = null;
+                
+                try {
+                    // 发送GET请求到API
+                    const response = await fetch(apiUrl);
+                    
+                    // 检查响应状态
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误: ${response.status}`);
+                    }
+                    
+                    // 获取响应文本
+                    const responseText = await response.text();
+                    
+                    // 尝试提取link值
+                    let extractedLink = extractLinkFromResponse(responseText);
+                    
+                    if (extractedLink) {
+                        // 显示成功状态
+                        showStatus(`生成成功！`, 'success');
+                        
+                        // 存储提取的link值
+                        currentExtractedLink = extractedLink;
+                        
+                        // 显示提取的link值
+                        linkTextElement.textContent = extractedLink;
+                        linkTextElement.style.color = '#155724';
+                        
+                        // 启用复制按钮
+                        copyLinkBtn.disabled = false;
+                    } else {
+                        // 使用JS弹窗提示未找到link值
+                        alert('不允许的链接');
+                        
+                        // 显示未找到link
+                        linkTextElement.textContent = '没有短链接';
+                        linkTextElement.style.color = '#856404';
+                        
+                        // 禁用复制按钮
+                        copyLinkBtn.disabled = true;
+                        currentExtractedLink = null;
+                    }
+                    
+                    // 显示结果容器
+                    resultContainer.style.display = 'block';
+                    
+                } catch (error) {
+                    // 显示错误状态
+                    showStatus(`提交失败: ${error.message}`, 'error');
+                    
+                    // 显示错误结果
+                    linkTextElement.textContent = `错误: ${error.message}`;
+                    linkTextElement.style.color = '#721c24';
+                    
+                    // 禁用复制按钮
+                    copyLinkBtn.disabled = true;
+                    currentExtractedLink = null;
+                    
+                    resultContainer.style.display = 'block';
+                } finally {
+                    // 隐藏加载状态
+                    loadingElement.style.display = 'none';
+                    submitBtn.disabled = false;
+                }
+            });
+            
+            // 从响应中提取link值
+            function extractLinkFromResponse(responseText) {
+                if (!responseText) return null;
+                
+                // 尝试解析为JSON
+                try {
+                    const jsonResponse = JSON.parse(responseText);
+                    
+                    // 查找link字段（不区分大小写）
+                    const linkKeys = ['link', 'Link', 'LINK', 'url', 'Url', 'URL', 'href', 'Href', 'HREF'];
+                    
+                    for (const key of linkKeys) {
+                        if (jsonResponse[key]) {
+                            return jsonResponse[key];
+                        }
+                    }
+                    
+                    // 递归查找嵌套对象中的link字段
+                    function findLinkInObject(obj) {
+                        for (const key in obj) {
+                            if (typeof obj[key] === 'string' && 
+                                (key.toLowerCase().includes('link') || 
+                                 key.toLowerCase().includes('url') || 
+                                 key.toLowerCase().includes('href'))) {
+                                return obj[key];
+                            }
+                            
+                            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                                const result = findLinkInObject(obj[key]);
+                                if (result) return result;
+                            }
+                        }
+                        return null;
+                    }
+                    
+                    const nestedLink = findLinkInObject(jsonResponse);
+                    if (nestedLink) return nestedLink;
+                    
+                } catch (e) {
+                    console.log('尝试从文本中提取链接');
+                }
+                
+                // 从文本中提取链接（正则表达式匹配URL）
+                const urlRegex = /(https?:\/\/[^\s"'<>]+)/gi;
+                const matches = responseText.match(urlRegex);
+                
+                if (matches && matches.length > 0) {
+                    // 返回第一个找到的URL
+                    return matches[0];
+                }
+                
+                // 尝试查找包含"link"字段的文本
+                const linkMatch = responseText.match(/["']?link["']?\s*[:=]\s*["']([^"']+)["']/i);
+                if (linkMatch && linkMatch[1]) {
+                    return linkMatch[1];
+                }
+                
+                // 尝试查找包含"url"字段的文本
+                const urlMatch = responseText.match(/["']?url["']?\s*[:=]\s*["']([^"']+)["']/i);
+                if (urlMatch && urlMatch[1]) {
+                    return urlMatch[1];
+                }
+                
+                return null;
+            }
+            
+            // 复制文本到剪贴板（兼容所有浏览器）
+            function copyToClipboard(text) {
+                // 方法1：使用navigator.clipboard（现代浏览器）
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text)
+                        .then(() => true)
+                        .catch(() => {
+                            // 如果失败，回退到方法2
+                            return fallbackCopyToClipboard(text);
+                        });
+                }
+                
+                // 方法2：使用execCommand（旧浏览器）
+                return fallbackCopyToClipboard(text);
+            }
+            
+            // 回退复制方法
+            function fallbackCopyToClipboard(text) {
+                return new Promise((resolve, reject) => {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    
+                    // 避免屏幕闪烁
+                    textArea.style.position = 'fixed';
+                    textArea.style.top = '0';
+                    textArea.style.left = '0';
+                    textArea.style.width = '2em';
+                    textArea.style.height = '2em';
+                    textArea.style.padding = '0';
+                    textArea.style.border = 'none';
+                    textArea.style.outline = 'none';
+                    textArea.style.boxShadow = 'none';
+                    textArea.style.background = 'transparent';
+                    textArea.style.opacity = '0';
+                    
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        
+                        if (successful) {
+                            resolve(true);
+                        } else {
+                            reject(new Error('复制失败'));
+                        }
+                    } catch (err) {
+                        document.body.removeChild(textArea);
+                        reject(err);
+                    }
+                });
+            }
+            
+            // 复制提取的link值
+            copyLinkBtn.addEventListener('click', function() {
+                if (!currentExtractedLink) {
+                    alert('没有可复制链接');
+                    return;
+                }
+                
+                copyToClipboard(currentExtractedLink)
+                    .then(() => {
+                        // 复制成功
+                        const originalContent = copyLinkBtn.innerHTML;
+                        copyLinkBtn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                        copyLinkBtn.classList.add('copied');
+                        
+                        showStatus('已复制', 'success');
+                        
+                        setTimeout(() => {
+                            copyLinkBtn.innerHTML = originalContent;
+                            copyLinkBtn.classList.remove('copied');
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('复制失败: ', err);
+                        
+                        // 如果复制失败，让用户手动选择
+                        linkTextElement.focus();
+                        if (document.selection) {
+                            // IE浏览器
+                            const range = document.body.createTextRange();
+                            range.moveToElementText(linkTextElement);
+                            range.select();
+                        } else if (window.getSelection) {
+                            // 其他浏览器
+                            const range = document.createRange();
+                            range.selectNodeContents(linkTextElement);
+                            const selection = window.getSelection();
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                        }
+                        
+                        alert('自动复制失败，已为您选中文本，请按Ctrl+C手动复制');
+                    });
+            });
+            
+            // 点击link文本也可以复制
+            linkTextElement.addEventListener('click', function() {
+                if (currentExtractedLink) {
+                    copyToClipboard(currentExtractedLink)
+                        .then(() => {
+                            showStatus('已复制', 'success');
+                            
+                            // 给用户视觉反馈
+                            linkTextElement.style.backgroundColor = '#d4edda';
+                            setTimeout(() => {
+                                linkTextElement.style.backgroundColor = '';
+                            }, 300);
+                        })
+                        .catch(err => {
+                            console.error('复制失败: ', err);
+                            alert('复制失败，请使用复制按钮');
+                        });
+                }
+            });
+            
+            // 显示状态消息
+            function showStatus(message, type) {
+                statusElement.textContent = message;
+                statusElement.className = `status ${type}`;
+                statusElement.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                `;
+                statusElement.style.display = 'flex';
+                
+                // 5秒后自动隐藏状态消息
+                setTimeout(() => {
+                    if (statusElement.textContent === message) {
+                        statusElement.style.display = 'none';
+                    }
+                }, 5000);
+            }
+            
+            // 初始聚焦到输入框
+            oidInput.focus();
+            
+            // 按Enter键提交
+            oidInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
